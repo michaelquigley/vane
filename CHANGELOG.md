@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+FEATURE: `internal/api` + `internal/server` — the contract-first API: OpenAPI 3.0.3 spec with committed ogen-generated server code, and handlers implementing the generated interface over a fresh `workspace.Load` per request. Board reads deliver per-card hashes, per-lane `rankedCount`, and `orderVersion` (absence is a version); every mutation carries the guards back and returns a fresh board; the typed 409 family splits `item_conflict`/`order_conflict` from `slug_collision`, which carries structured recovery paths (preserved capture draft, rename source/destination). Guard wire semantics pinned by tests against temp-dir workspaces.
+
 FEATURE: `internal/workspace` — root discovery (roadmap dir, `.git` wall, start-dir fallback), fresh-read snapshots with spec error tiers, and the composite gestures: two-phase capture (draft + no-clobber finalize with four explicit outcomes), transition and transition-and-place with ranked-entry cleanup, reorder, retitle/rename-to-slug with in-place order occurrence replacement, and verbatim content save with effective-lane transition discipline. Every gesture preflights its guard hashes and prunes opportunistically only on order writes; a whole-tree diff suite pins each gesture to exactly its expressing files and lines.
 
 FEATURE: `cmd/vane` — the CLI: `vane [title]` capture through the `VANE_EDITOR`/`EDITOR` cascade, `vane list` (lane-grouped board with ranks and flags), `vane state` transitions, and `vane version`; `-v` re-inits `dl` at debug.

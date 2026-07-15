@@ -14,6 +14,15 @@ import (
 // partial failure reported plainly. opportunistic pruning rides along only
 // when order.yaml is already being written.
 
+// Refusal is a gesture precondition failure — the gesture cannot mean
+// anything against this item. not a conflict, not a server fault; the
+// caller's request is the thing to change.
+type Refusal struct {
+	Msg string
+}
+
+func (r *Refusal) Error() string { return r.Msg }
+
 func effectiveLane(doc *document.ItemDoc) model.State {
 	if doc.State == "" {
 		return model.Inbox
@@ -220,11 +229,11 @@ func (w *Workspace) RenameToSlug(filename, expectedHash, expectedOrderVersion st
 	}
 
 	if !item.Doc.TitleOK {
-		return "", fmt.Errorf("%s: title is unreadable; nothing to derive a filename from", filename)
+		return "", &Refusal{Msg: fmt.Sprintf("%s: title is unreadable; nothing to derive a filename from", filename)}
 	}
 	slug := model.Slug(item.Doc.Title)
 	if slug == "" {
-		return "", fmt.Errorf("%s: title reduces to an empty slug; the filename is hand-picked and carries no flag", filename)
+		return "", &Refusal{Msg: fmt.Sprintf("%s: title reduces to an empty slug; the filename is hand-picked and carries no flag", filename)}
 	}
 	newName := slug + ".md"
 	if newName == filename {

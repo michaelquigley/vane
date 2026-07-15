@@ -1,0 +1,118 @@
+// Package server implements the generated api.Handler over a workspace.
+// every handler call rebuilds from a fresh disk read — the server holds no
+// snapshot — and translation between model and wire types happens at this
+// edge only.
+package server
+
+import (
+	"context"
+	"errors"
+	"path/filepath"
+
+	"git.hq.quigley.com/products/vane/internal/api"
+	"git.hq.quigley.com/products/vane/internal/document"
+	"git.hq.quigley.com/products/vane/internal/model"
+	"git.hq.quigley.com/products/vane/internal/workspace"
+)
+
+// Server is the api.Handler implementation: a workspace root and nothing
+// else.
+type Server struct {
+	w *workspace.Workspace
+}
+
+// New returns a server over the given workspace.
+func New(w *workspace.Workspace) *Server {
+	return &Server{w: w}
+}
+
+var _ api.Handler = (*Server)(nil)
+
+// NewError shapes any unmapped handler error as the default response —
+// repository-level failures, partial two-file reports, and the like, the
+// message verbatim.
+func (s *Server) NewError(_ context.Context, err error) *api.ServerErrorStatusCode {
+	return &api.ServerErrorStatusCode{
+		StatusCode: 500,
+		Response:   api.ErrorResponse{Message: err.Error()},
+	}
+}
+
+// asConflict maps the document layer's typed refusals onto the wire's 409
+// family: guard mismatches split item/order by the file they guard, and
+// no-clobber collisions carry their structured recovery paths.
+func asConflict(err error) (*api.Conflict, bool) {
+	var conflict *document.ConflictError
+	if errors.As(err, &conflict) {
+		reason := api.ConflictReasonItemConflict
+		if filepath.Base(conflict.Path) == "order.yaml" {
+			reason = api.ConflictReasonOrderConflict
+		}
+		return &api.Conflict{Reason: reason, Message: err.Error()}, true
+	}
+	var collision *document.CollisionError
+	if errors.As(err, &collision) {
+		return &api.Conflict{
+			Reason:     api.ConflictReasonSlugCollision,
+			Message:    err.Error(),
+			SourcePath: api.NewOptString(collision.Src),
+			DestPath:   api.NewOptString(collision.Dst),
+		}, true
+	}
+	return nil, false
+}
+
+func wireCard(snap *workspace.Snapshot, c model.CardInput) api.Card {
+	card := api.Card{
+		Filename: c.Filename,
+		Title:    c.Title,
+		Flags:    []api.Flag{},
+	}
+	if c.State != "" {
+		card.State = api.NewOptState(api.State(c.State))
+	}
+	if c.Created != "" {
+		card.Created = api.NewOptString(c.Created)
+	}
+	for _, f := range c.Flags {
+		card.Flags = append(card.Flags, api.Flag{Kind: api.FlagKind(f.Kind), Diagnostic: f.Diagnostic})
+	}
+	if it, ok := snap.Item(c.Filename); ok {
+		card.Hash = it.Hash
+		card.Tags = it.Doc.Tags
+		if it.Doc.Source != "" {
+			card.Source = api.NewOptString(it.Doc.Source)
+		}
+		for _, l := range it.Doc.Log {
+			card.Log = append(card.Log, api.LogEntry{Stamp: l.Stamp, Note: l.Note})
+		}
+	}
+	return card
+}
+
+func wireBoard(snap *workspace.Snapshot) *api.Board {
+	board := snap.Board()
+	out := &api.Board{OrderVersion: snap.OrderVersion}
+	for _, lane := range board.Lanes {
+		wl := api.Lane{
+			State:       api.State(lane.State),
+			Cards:       []api.Card{},
+			RankedCount: lane.RankedCount,
+		}
+		for _, c := range lane.Cards {
+			wl.Cards = append(wl.Cards, wireCard(snap, c))
+		}
+		out.Lanes = append(out.Lanes, wl)
+	}
+	return out
+}
+
+// freshBoard reloads from disk after a mutation so the client repaints from
+// disk truth, never from what the mutation thinks it did.
+func (s *Server) freshBoard() (*api.Board, error) {
+	snap, err := s.w.Load()
+	if err != nil {
+		return nil, err
+	}
+	return wireBoard(snap), nil
+}

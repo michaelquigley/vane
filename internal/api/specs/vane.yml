@@ -1,0 +1,408 @@
+openapi: "3.0.3"
+
+info:
+  title: vane
+  description: >
+    your roadmap lives in your repo. every read that paints state carries
+    content hashes; every mutation carries them back; every mutation success
+    returns a fresh board so the client repaints from disk truth. no auth,
+    localhost only.
+  version: 1.0.0
+
+servers:
+  - url: /api/v1
+
+paths:
+  /board:
+    get:
+      operationId: getBoard
+      summary: the computed board, rebuilt from a fresh read of the disk
+      responses:
+        "200":
+          description: lanes in lifecycle order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/board"
+        default:
+          $ref: "#/components/responses/serverError"
+
+  /items:
+    post:
+      operationId: createItem
+      summary: capture a new item into inbox
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title:
+                  type: string
+                body:
+                  type: string
+      responses:
+        "201":
+          description: captured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/itemLanded"
+        "400":
+          $ref: "#/components/responses/validationError"
+        "409":
+          $ref: "#/components/responses/conflict"
+        default:
+          $ref: "#/components/responses/serverError"
+
+  /items/{filename}:
+    parameters:
+      - $ref: "#/components/parameters/filename"
+    get:
+      operationId: getItem
+      summary: one item's raw content and parsed card
+      responses:
+        "200":
+          description: the item
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [content, card, hash]
+                properties:
+                  content:
+                    type: string
+                  card:
+                    $ref: "#/components/schemas/card"
+                  hash:
+                    type: string
+        "404":
+          description: no such item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/errorResponse"
+        default:
+          $ref: "#/components/responses/serverError"
+
+  /items/{filename}/content:
+    parameters:
+      - $ref: "#/components/parameters/filename"
+    put:
+      operationId: saveContent
+      summary: raw save; a state-changing save runs the ranked-transition cleanup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content, expectedHash, expectedOrderVersion]
+              properties:
+                content:
+                  type: string
+                expectedHash:
+                  type: string
+                expectedOrderVersion:
+                  type: string
+      responses:
+        "200":
+          $ref: "#/components/responses/freshBoard"
+        "409":
+          $ref: "#/components/responses/conflict"
+        default:
+          $ref: "#/components/responses/serverError"
+
+  /items/{filename}/state:
+    parameters:
+      - $ref: "#/components/parameters/filename"
+    post:
+      operationId: transitionItem
+      summary: transition, or transition-and-place when position is given
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [state, expectedHash, expectedOrderVersion]
+              properties:
+                state:
+                  $ref: "#/components/schemas/state"
+                expectedHash:
+                  type: string
+                expectedOrderVersion:
+                  type: string
+                position:
+                  type: integer
+                  minimum: 0
+                  description: >
+                    index into the destination lane's ranked list only,
+                    never the displayed card sequence.
+      responses:
+        "200":
+          $ref: "#/components/responses/freshBoard"
+        "409":
+          $ref: "#/components/responses/conflict"
+        default:
+          $ref: "#/components/responses/serverError"
+
+  /order/{lane}:
+    parameters:
+      - name: lane
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/state"
+    put:
+      operationId: reorderLane
+      summary: rewrite one lane's ranked prefix
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [filenames, expectedVersion]
+              properties:
+                filenames:
+                  type: array
+                  items:
+                    type: string
+                  description: >
+                    only the resulting ranked prefix, never the whole
+                    displayed lane; cards absent from it stay unranked.
+                expectedVersion:
+                  type: string
+      responses:
+        "200":
+          $ref: "#/components/responses/freshBoard"
+        "409":
+          $ref: "#/components/responses/conflict"
+        default:
+          $ref: "#/components/responses/serverError"
+
+  /items/{filename}/retitle:
+    parameters:
+      - $ref: "#/components/parameters/filename"
+    post:
+      operationId: retitleItem
+      summary: retitle and rename to the new slug, rank preserved
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, expectedHash, expectedOrderVersion]
+              properties:
+                title:
+                  type: string
+                expectedHash:
+                  type: string
+                expectedOrderVersion:
+                  type: string
+      responses:
+        "200":
+          description: retitled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/itemLanded"
+        "400":
+          $ref: "#/components/responses/validationError"
+        "409":
+          $ref: "#/components/responses/conflict"
+        default:
+          $ref: "#/components/responses/serverError"
+
+  /items/{filename}/rename-to-slug:
+    parameters:
+      - $ref: "#/components/parameters/filename"
+    post:
+      operationId: renameToSlug
+      summary: repair the filename-mismatch flag with one rename
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [expectedHash, expectedOrderVersion]
+              properties:
+                expectedHash:
+                  type: string
+                expectedOrderVersion:
+                  type: string
+      responses:
+        "200":
+          description: renamed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/itemLanded"
+        "400":
+          $ref: "#/components/responses/validationError"
+        "409":
+          $ref: "#/components/responses/conflict"
+        default:
+          $ref: "#/components/responses/serverError"
+
+components:
+  parameters:
+    filename:
+      name: filename
+      in: path
+      required: true
+      schema:
+        type: string
+
+  responses:
+    freshBoard:
+      description: the board after the mutation, rebuilt from disk truth
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/board"
+    conflict:
+      description: >
+        guard refusal. item_conflict and order_conflict mean the view went
+        stale — reload. slug_collision is a no-clobber refusal and carries
+        structured recovery paths.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/conflict"
+    validationError:
+      description: the request fails prevalidation; nothing was written
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/errorResponse"
+    serverError:
+      description: repository-level failure
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/errorResponse"
+
+  schemas:
+    state:
+      type: string
+      enum: [inbox, horizon, researching, building, evaluating, done, dropped]
+
+    flag:
+      type: object
+      required: [kind, diagnostic]
+      properties:
+        kind:
+          type: string
+          enum: [malformed, filename-mismatch]
+        diagnostic:
+          type: string
+
+    logEntry:
+      type: object
+      required: [stamp, note]
+      properties:
+        stamp:
+          type: string
+        note:
+          type: string
+
+    card:
+      type: object
+      required: [filename, title, flags, hash]
+      properties:
+        filename:
+          type: string
+        title:
+          type: string
+          description: empty when the title could not be read; show the filename.
+        state:
+          allOf:
+            - $ref: "#/components/schemas/state"
+          description: absent when state could not be read; the lane carries the effective placement.
+        created:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        source:
+          type: string
+        log:
+          type: array
+          items:
+            $ref: "#/components/schemas/logEntry"
+        flags:
+          type: array
+          items:
+            $ref: "#/components/schemas/flag"
+        hash:
+          type: string
+
+    lane:
+      type: object
+      required: [state, cards, rankedCount]
+      properties:
+        state:
+          $ref: "#/components/schemas/state"
+        cards:
+          type: array
+          items:
+            $ref: "#/components/schemas/card"
+        rankedCount:
+          type: integer
+          description: >
+            the first rankedCount cards are the lane's ranked prefix; the
+            rest are the computed unranked tail.
+
+    board:
+      type: object
+      required: [lanes, orderVersion]
+      properties:
+        lanes:
+          type: array
+          items:
+            $ref: "#/components/schemas/lane"
+        orderVersion:
+          type: string
+          description: order.yaml's hash, or the sentinel "absent". absence is a version.
+
+    itemLanded:
+      type: object
+      required: [filename, board]
+      properties:
+        filename:
+          type: string
+        board:
+          $ref: "#/components/schemas/board"
+
+    conflict:
+      type: object
+      required: [reason, message]
+      properties:
+        reason:
+          type: string
+          enum: [item_conflict, order_conflict, slug_collision]
+        message:
+          type: string
+        tempPath:
+          type: string
+          description: capture collisions; the preserved .capture- draft.
+        sourcePath:
+          type: string
+          description: retitle and rename collisions; the surviving source file.
+        destPath:
+          type: string
+          description: the colliding destination.
+
+    errorResponse:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
