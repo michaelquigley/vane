@@ -31,7 +31,7 @@ function CardView({ card, onOpen }: { card: Card; onOpen: (filename: string) => 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.4 : undefined,
+    opacity: isDragging ? 0.35 : undefined,
   };
   return (
     <div
@@ -42,6 +42,16 @@ function CardView({ card, onOpen }: { card: Card; onOpen: (filename: string) => 
       {...listeners}
       onClick={() => onOpen(card.filename)}
     >
+      <CardBody card={card} />
+    </div>
+  );
+}
+
+// CardBody is the card's presentation alone — shared by the sortable card
+// in its lane and the drag overlay that follows the pointer.
+export function CardBody({ card }: { card: Card }) {
+  return (
+    <>
       <div className="card-title">{card.title || card.filename}</div>
       {card.flags.length > 0 && (
         <div className="card-flags">
@@ -57,6 +67,6 @@ function CardView({ card, onOpen }: { card: Card; onOpen: (filename: string) => 
           {entry.stamp} — {entry.note}
         </div>
       ))}
-    </div>
+    </>
   );
 }

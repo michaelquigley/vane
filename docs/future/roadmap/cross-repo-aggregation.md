@@ -1,5 +1,5 @@
 ---
-title: cross-repo aggregation
+title: Cross-Repo Aggregation
 state: horizon
 created: 2026-07-14
 ---

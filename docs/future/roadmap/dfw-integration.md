@@ -1,5 +1,5 @@
 ---
-title: dfw integration
+title: dfw Integration
 state: horizon
 created: 2026-07-14
 ---

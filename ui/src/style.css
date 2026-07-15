@@ -1,24 +1,27 @@
+@import "@fontsource-variable/source-serif-4";
+@import "@fontsource-variable/source-code-pro";
+
 * {
   box-sizing: border-box;
 }
 
 :root {
-  color-scheme: dark;
-  --bg: #16181d;
-  --lane: #1e2128;
-  --card: #262a33;
-  --card-edge: #343a46;
-  --text: #d6d9e0;
-  --dim: #8a90a0;
-  --accent: #6ea8fe;
-  --warn: #e0af68;
+  color-scheme: light;
+  --bg: #f4f5f7;
+  --lane: #e9ebef;
+  --card: #ffffff;
+  --card-edge: #d6dae1;
+  --text: #26292f;
+  --dim: #69707d;
+  --accent: #2563eb;
+  --warn: #b45309;
 }
 
 body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font: 14px/1.45 system-ui, sans-serif;
+  font: 15px/1.5 "Source Serif 4 Variable", serif;
 }
 
 .app {
@@ -43,6 +46,8 @@ header h1 {
 button {
   background: var(--card);
   color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
   border: 1px solid var(--card-edge);
   border-radius: 4px;
   padding: 0.25rem 0.7rem;
@@ -55,7 +60,7 @@ button:hover {
 
 input,
 textarea {
-  background: var(--bg);
+  background: var(--card);
   color: var(--text);
   border: 1px solid var(--card-edge);
   border-radius: 4px;
@@ -66,8 +71,8 @@ textarea {
 .notice {
   margin: 0 1rem 0.5rem;
   padding: 0.4rem 0.7rem;
-  background: #3a2f1e;
-  border: 1px solid var(--warn);
+  background: #fdf1d7;
+  border: 1px solid #dca54c;
   border-radius: 4px;
   cursor: pointer;
 }
@@ -122,6 +127,7 @@ textarea {
   border-radius: 6px;
   padding: 0.5rem 0.6rem;
   cursor: grab;
+  box-shadow: 0 1px 2px rgba(20, 24, 30, 0.07);
 }
 
 .card-title {
@@ -139,34 +145,20 @@ textarea {
   font-size: 0.7rem;
   padding: 0.05rem 0.4rem;
   border-radius: 3px;
-  background: #4a2f2f;
-  border: 1px solid #7a4a4a;
+  background: #fbe4e4;
+  border: 1px solid #d99a9a;
   cursor: help;
 }
 
 .flag-filename-mismatch {
-  background: #4a3f2a;
-  border-color: #7a6a3a;
+  background: #f8eed6;
+  border-color: #d3b26a;
 }
 
 .log-line {
   margin-top: 0.3rem;
   font-size: 0.75rem;
   color: var(--dim);
-}
-
-.panel {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: min(640px, 90vw);
-  background: var(--lane);
-  border-left: 1px solid var(--card-edge);
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
 }
 
 .panel-head {
@@ -178,14 +170,6 @@ textarea {
 .panel-head h2 {
   margin: 0;
   font-size: 1rem;
-}
-
-.panel textarea {
-  flex: 1;
-  resize: none;
-  font-family: ui-monospace, monospace;
-  font-size: 0.85rem;
-  white-space: pre;
 }
 
 .panel-row {
@@ -200,8 +184,8 @@ textarea {
 .local-notice {
   margin: 0;
   padding: 0.4rem 0.7rem;
-  background: #3a2f1e;
-  border: 1px solid var(--warn);
+  background: #fdf1d7;
+  border: 1px solid #dca54c;
   border-radius: 4px;
   cursor: pointer;
 }
@@ -209,7 +193,7 @@ textarea {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(30, 34, 40, 0.35);
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -217,7 +201,7 @@ textarea {
 }
 
 .modal {
-  background: var(--lane);
+  background: var(--bg);
   border: 1px solid var(--card-edge);
   border-radius: 8px;
   padding: 1rem;
@@ -234,9 +218,175 @@ textarea {
 
 .modal textarea {
   min-height: 8rem;
-  font-family: ui-monospace, monospace;
+  font-family: "Source Code Pro Variable", monospace;
+}
+
+.modal-item {
+  width: min(760px, 94vw);
+  height: min(80vh, 56rem);
+}
+
+.item-meta {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.meta-pill {
+  font-size: 0.75rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: var(--card);
+  border: 1px solid var(--card-edge);
+  color: var(--dim);
+}
+
+.meta-tag {
+  color: var(--accent);
+}
+
+.meta-source {
+  color: var(--warn);
+}
+
+.meta-file {
+  margin-left: auto;
+  font-size: 0.75rem;
+  font-family: "Source Code Pro Variable", monospace;
+  color: var(--dim);
+}
+
+.item-log {
+  border-left: 2px solid var(--card-edge);
+  padding-left: 0.6rem;
+}
+
+.item-body {
+  flex: 1;
+  overflow-y: auto;
+  line-height: 1.55;
+}
+
+.item-body > :first-child {
+  margin-top: 0;
+}
+
+.item-body h1,
+.item-body h2,
+.item-body h3 {
+  font-size: 1rem;
+  margin: 1em 0 0.4em;
+}
+
+.item-body p,
+.item-body ul,
+.item-body ol {
+  margin: 0.5em 0;
+}
+
+.item-body code {
+  background: var(--card);
+  border: 1px solid var(--card-edge);
+  border-radius: 3px;
+  padding: 0.05rem 0.3rem;
+  font-family: "Source Code Pro Variable", monospace;
+  font-size: 0.85em;
+}
+
+.item-body pre {
+  background: var(--card);
+  border: 1px solid var(--card-edge);
+  border-radius: 6px;
+  padding: 0.6rem;
+  overflow-x: auto;
+}
+
+.item-body pre code {
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.item-body blockquote {
+  margin: 0.5em 0;
+  padding-left: 0.7rem;
+  border-left: 2px solid var(--card-edge);
+  color: var(--dim);
+}
+
+.item-body a {
+  color: var(--accent);
+}
+
+.item-body table {
+  border-collapse: collapse;
+}
+
+.item-body th,
+.item-body td {
+  border: 1px solid var(--card-edge);
+  padding: 0.25rem 0.55rem;
+}
+
+.raw-editor {
+  flex: 1;
+  resize: none;
+  font-family: "Source Code Pro Variable", monospace;
+  font-size: 0.85rem;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+.dim {
+  color: var(--dim);
 }
 
 .fatal {
   padding: 2rem;
+}
+
+.title-click {
+  cursor: text;
+  border-bottom: 1px dashed transparent;
+}
+
+.title-click:hover {
+  border-bottom-color: var(--dim);
+}
+
+.title-edit {
+  flex: 1;
+  margin-right: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.head-actions {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem;
+  border: 1px solid transparent;
+  background: none;
+  color: var(--dim);
+  border-radius: 4px;
+}
+
+.icon-button:hover {
+  color: var(--text);
+  border-color: var(--card-edge);
+  background: var(--card);
+}
+
+.card-overlay {
+  cursor: grabbing;
+  box-shadow: 0 6px 18px rgba(20, 24, 30, 0.25);
+  width: 214px;
 }

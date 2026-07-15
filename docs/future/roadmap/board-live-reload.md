@@ -1,6 +1,6 @@
 ---
 title: board live reload
-state: horizon
+state: inbox
 created: 2026-07-15
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: automated state sync with the pipeline
-state: horizon
+state: inbox
 created: 2026-07-14
 ---
 

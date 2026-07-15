@@ -1,16 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   DndContext,
+  DragOverlay,
   PointerSensor,
   closestCorners,
   useSensor,
   useSensors,
   type DragEndEvent,
+  type DragStartEvent,
 } from "@dnd-kit/core";
-import { fetchBoard, transition, reorder, type Board, type Conflict, type Outcome, type State } from "./api";
+import { fetchBoard, transition, reorder, type Board, type Card, type Conflict, type Outcome, type State } from "./api";
 import { rankedAfterMove } from "./reorder";
-import { LaneColumn } from "./LaneColumn";
-import { ItemPanel } from "./ItemPanel";
+import { CardBody, LaneColumn } from "./LaneColumn";
+import { ItemModal } from "./ItemModal";
 import { CaptureModal } from "./CaptureModal";
 
 export default function App() {
@@ -19,6 +21,7 @@ export default function App() {
   const [notice, setNotice] = useState<string | null>(null);
   const [openItem, setOpenItem] = useState<string | null>(null);
   const [captureOpen, setCaptureOpen] = useState(false);
+  const [dragging, setDragging] = useState<Card | null>(null);
 
   const reload = useCallback(async () => {
     try {
@@ -59,8 +62,18 @@ export default function App() {
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
+  const handleDragStart = useCallback(
+    (event: DragStartEvent) => {
+      if (!board) return;
+      const source = locate(board, String(event.active.id));
+      setDragging(source ? source.lane.cards[source.index] : null);
+    },
+    [board],
+  );
+
   const handleDragEnd = useCallback(
     async (event: DragEndEvent) => {
+      setDragging(null);
       if (!board || !event.over) return;
       const activeId = String(event.active.id);
       const overId = String(event.over.id);
@@ -113,15 +126,28 @@ export default function App() {
           {notice}
         </div>
       )}
-      <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCorners}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragCancel={() => setDragging(null)}
+      >
         <div className="board">
           {board.lanes.map((lane) => (
             <LaneColumn key={lane.state} lane={lane} onOpen={setOpenItem} />
           ))}
         </div>
+        <DragOverlay>
+          {dragging && (
+            <div className="card card-overlay">
+              <CardBody card={dragging} />
+            </div>
+          )}
+        </DragOverlay>
       </DndContext>
       {openItem && (
-        <ItemPanel
+        <ItemModal
           filename={openItem}
           orderVersion={board.orderVersion}
           onOutcome={applyOutcome}

@@ -1,6 +1,6 @@
 ---
 title: done-item reporting
-state: horizon
+state: inbox
 created: 2026-07-14
 ---
 

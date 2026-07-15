@@ -1,6 +1,6 @@
 ---
 title: log append gestures
-state: horizon
+state: inbox
 created: 2026-07-15
 ---
 
