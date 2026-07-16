@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.1.1
+
 CHANGE: the board carries `project` (the discovered root's name), shown in the header beside the mark and in the browser tab title.
 
 FEATURE: item deletion — the operator's curation act given a gesture (a recorded design change from v1's tool-never-deletes rule): `POST /items/{filename}/delete` removes the file and its order.yaml entries in one hash-guarded gesture, surfaced in the item modal behind an inline confirm. Agents still never delete items.
