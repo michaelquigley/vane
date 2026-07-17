@@ -239,6 +239,8 @@ func TestParseItemMalformedClassification(t *testing.T) {
 		{"invalid log stamp", "---\ntitle: a\nstate: inbox\ncreated: 2026-07-13\nlog:\n  - stamp: soon\n    note: n\n---\n", true},
 		{"null claimed value", "---\ntitle:\nstate: inbox\ncreated: 2026-07-13\n---\n", true},
 		{"milestone violating shape", "---\ntitle: a\nstate: inbox\ncreated: 2026-07-13\nmilestone: [v0.1.x]\n---\n", true},
+		{"subsystems violating shape", "---\ntitle: a\nstate: inbox\ncreated: 2026-07-13\nsubsystems: reef\n---\n", true},
+		{"valid subsystems", "---\ntitle: a\nstate: inbox\ncreated: 2026-07-13\nsubsystems: [reef, flo]\n---\n", false},
 		{"duplicate milestone", "---\ntitle: a\nstate: inbox\ncreated: 2026-07-13\nmilestone: v0.1.x\nmilestone: v0.5.x\n---\n", true},
 	}
 	for _, tt := range tests {

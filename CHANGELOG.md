@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+FEATURE: `subsystems:` — a second optional claimed list field naming the parts of the stack an item impacts, for combined projects with distinguishable parts. Rendered as outlined mono chips (visibly a different species from the solid genre tags), AND-filterable like tags and composing with tag and milestone filters; shown in the item modal's metadata block. Schema addition recorded in the grimoire's roadmap-convention note.
+
 ## v0.1.1
 
 CHANGE: the board carries `project` (the discovered root's name), shown in the header beside the mark and in the browser tab title.

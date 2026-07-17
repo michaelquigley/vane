@@ -16,7 +16,7 @@ import { CardBody, LaneColumn } from "./LaneColumn";
 import { ItemModal } from "./ItemModal";
 import { CaptureModal } from "./CaptureModal";
 import { CaptureIcon, VaneMark } from "./icons";
-import { labelColor } from "./labels";
+import { labelColor, subsystemColor } from "./labels";
 
 export default function App() {
   const [board, setBoard] = useState<Board | null>(null);
@@ -26,6 +26,7 @@ export default function App() {
   const [captureOpen, setCaptureOpen] = useState(false);
   const [dragging, setDragging] = useState<Card | null>(null);
   const [tagFilter, setTagFilter] = useState<string[]>([]);
+  const [subsystemFilter, setSubsystemFilter] = useState<string[]>([]);
   const [milestoneFilter, setMilestoneFilter] = useState<string | null>(null);
   // server truth as of drag start: the optimistic board mutates freely
   // during the drag, and this is what gestures compute against and what a
@@ -152,8 +153,10 @@ export default function App() {
       // filter, the card lands directly beside the visible card it was
       // dropped against, and hidden neighbors stay where they are. the
       // gesture itself still computes against the pre-drag server truth.
-      const isFiltering = tagFilter.length > 0 || milestoneFilter !== null;
-      const displayedBoard = isFiltering ? filterBoard(working, tagFilter, milestoneFilter) : working;
+      const isFiltering = tagFilter.length > 0 || subsystemFilter.length > 0 || milestoneFilter !== null;
+      const displayedBoard = isFiltering
+        ? filterBoard(working, tagFilter, subsystemFilter, milestoneFilter)
+        : working;
       const displayedLane = displayedBoard.lanes.find((l) => l.state === cur.lane.state);
       const anchor = anchorFor(displayedLane?.cards.map((c) => c.filename) ?? [], activeId, overId);
 
@@ -175,11 +178,15 @@ export default function App() {
         snapshot,
       );
     },
-    [board, preDrag, finishDrag, tagFilter, milestoneFilter],
+    [board, preDrag, finishDrag, tagFilter, subsystemFilter, milestoneFilter],
   );
 
   const toggleTag = useCallback((tag: string) => {
     setTagFilter((cur) => (cur.includes(tag) ? cur.filter((t) => t !== tag) : [...cur, tag]));
+  }, []);
+
+  const toggleSubsystem = useCallback((subsystem: string) => {
+    setSubsystemFilter((cur) => (cur.includes(subsystem) ? cur.filter((s) => s !== subsystem) : [...cur, subsystem]));
   }, []);
 
   const toggleMilestone = useCallback((milestone: string) => {
@@ -208,8 +215,8 @@ export default function App() {
   // tag and the selected milestone. drags stay live: placement is
   // anchor-based, so a filtered drop lands beside the visible card it was
   // dropped against.
-  const filtering = tagFilter.length > 0 || milestoneFilter !== null;
-  const shown = filtering ? filterBoard(board, tagFilter, milestoneFilter) : board;
+  const filtering = tagFilter.length > 0 || subsystemFilter.length > 0 || milestoneFilter !== null;
+  const shown = filtering ? filterBoard(board, tagFilter, subsystemFilter, milestoneFilter) : board;
 
   return (
     <div className="app">
@@ -231,6 +238,17 @@ export default function App() {
                 {milestoneFilter} ×
               </span>
             )}
+            {subsystemFilter.map((subsystem) => (
+              <span
+                key={subsystem}
+                className="subsystem-pill tag-click"
+                style={subsystemColor(subsystem)}
+                title={`stop filtering by ${subsystem}`}
+                onClick={() => toggleSubsystem(subsystem)}
+              >
+                {subsystem} ×
+              </span>
+            ))}
             {tagFilter.map((tag) => (
               <span
                 key={tag}
@@ -245,6 +263,7 @@ export default function App() {
             <button
               onClick={() => {
                 setTagFilter([]);
+                setSubsystemFilter([]);
                 setMilestoneFilter(null);
               }}
             >
@@ -273,6 +292,7 @@ export default function App() {
               lane={lane}
               onOpen={setOpenItem}
               onToggleTag={toggleTag}
+              onToggleSubsystem={toggleSubsystem}
               onToggleMilestone={toggleMilestone}
             />
           ))}
@@ -331,9 +351,11 @@ function locateTarget(board: Board, overId: string): Located | null {
 // and the selected milestone. rankedCount shrinks to the surviving members
 // of the ranked prefix so the boundary rule still lands between ranked and
 // unranked cards.
-function filterBoard(board: Board, tags: string[], milestone: string | null): Board {
+function filterBoard(board: Board, tags: string[], subsystems: string[], milestone: string | null): Board {
   const matches = (c: Card) =>
-    tags.every((t) => (c.tags ?? []).includes(t)) && (milestone === null || c.milestone === milestone);
+    tags.every((t) => (c.tags ?? []).includes(t)) &&
+    subsystems.every((s) => (c.subsystems ?? []).includes(s)) &&
+    (milestone === null || c.milestone === milestone);
   return {
     ...board,
     lanes: board.lanes.map((lane) => ({

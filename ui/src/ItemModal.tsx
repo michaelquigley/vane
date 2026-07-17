@@ -12,7 +12,7 @@ import {
   type Outcome,
 } from "./api";
 import { CloseIcon, DeleteIcon, EditIcon } from "./icons";
-import { labelColor, sortedTags } from "./labels";
+import { labelColor, sortedTags, subsystemColor } from "./labels";
 
 // the item modal renders the body as markdown by default; the raw-edit
 // gesture lives behind an explicit edit mode, where the operator's own
@@ -192,6 +192,18 @@ export function ItemModal({
           <>
             <div className="meta-label">milestone</div>
             <div className="meta-value meta-mono">{card.milestone}</div>
+          </>
+        )}
+        {(card.subsystems ?? []).length > 0 && (
+          <>
+            <div className="meta-label">subsystems</div>
+            <div className="meta-value">
+              {sortedTags(card.subsystems).map((subsystem) => (
+                <span key={subsystem} className="subsystem-pill" style={subsystemColor(subsystem)}>
+                  {subsystem}
+                </span>
+              ))}
+            </div>
           </>
         )}
         {(card.tags ?? []).length > 0 && (

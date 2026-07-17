@@ -80,6 +80,7 @@ func wireCard(snap *workspace.Snapshot, c model.CardInput) api.Card {
 	if it, ok := snap.Item(c.Filename); ok {
 		card.Hash = it.Hash
 		card.Tags = it.Doc.Tags
+		card.Subsystems = it.Doc.Subsystems
 		if it.Doc.Source != "" {
 			card.Source = api.NewOptString(it.Doc.Source)
 		}

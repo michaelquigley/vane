@@ -2,17 +2,19 @@ import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { Card, Lane } from "./api";
-import { labelColor, sortedTags } from "./labels";
+import { labelColor, sortedTags, subsystemColor } from "./labels";
 
 export function LaneColumn({
   lane,
   onOpen,
   onToggleTag,
+  onToggleSubsystem,
   onToggleMilestone,
 }: {
   lane: Lane;
   onOpen: (filename: string) => void;
   onToggleTag?: (tag: string) => void;
+  onToggleSubsystem?: (subsystem: string) => void;
   onToggleMilestone?: (milestone: string) => void;
 }) {
   const { setNodeRef } = useDroppable({ id: `lane:${lane.state}` });
@@ -30,6 +32,7 @@ export function LaneColumn({
                 card={card}
                 onOpen={onOpen}
                 onToggleTag={onToggleTag}
+                onToggleSubsystem={onToggleSubsystem}
                 onToggleMilestone={onToggleMilestone}
               />
             </div>
@@ -44,11 +47,13 @@ function CardView({
   card,
   onOpen,
   onToggleTag,
+  onToggleSubsystem,
   onToggleMilestone,
 }: {
   card: Card;
   onOpen: (filename: string) => void;
   onToggleTag?: (tag: string) => void;
+  onToggleSubsystem?: (subsystem: string) => void;
   onToggleMilestone?: (milestone: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -68,7 +73,12 @@ function CardView({
       {...listeners}
       onClick={() => onOpen(card.filename)}
     >
-      <CardBody card={card} onToggleTag={onToggleTag} onToggleMilestone={onToggleMilestone} />
+      <CardBody
+        card={card}
+        onToggleTag={onToggleTag}
+        onToggleSubsystem={onToggleSubsystem}
+        onToggleMilestone={onToggleMilestone}
+      />
     </div>
   );
 }
@@ -79,15 +89,41 @@ function CardView({
 export function CardBody({
   card,
   onToggleTag,
+  onToggleSubsystem,
   onToggleMilestone,
 }: {
   card: Card;
   onToggleTag?: (tag: string) => void;
+  onToggleSubsystem?: (subsystem: string) => void;
   onToggleMilestone?: (milestone: string) => void;
 }) {
   return (
     <>
-      <div className="card-title">{card.title || card.filename}</div>
+      <div className="card-title">
+        {card.title || card.filename}
+        {(card.subsystems ?? []).length > 0 && (
+          <sup className="card-subsystems">
+            {sortedTags(card.subsystems).map((subsystem) => (
+              <span
+                key={subsystem}
+                className={onToggleSubsystem ? "subsystem-text tag-click" : "subsystem-text"}
+                style={subsystemColor(subsystem)}
+                title={onToggleSubsystem ? `filter by ${subsystem}` : undefined}
+                onClick={
+                  onToggleSubsystem
+                    ? (e) => {
+                        e.stopPropagation();
+                        onToggleSubsystem(subsystem);
+                      }
+                    : undefined
+                }
+              >
+                {subsystem}
+              </span>
+            ))}
+          </sup>
+        )}
+      </div>
       {(card.tags ?? []).length > 0 && (
         <div className="card-tags">
           {sortedTags(card.tags).map((tag) => (

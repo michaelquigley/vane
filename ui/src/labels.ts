@@ -45,6 +45,19 @@ export function sortedTags(tags: string[] | undefined): string[] {
   return [...(tags ?? [])].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
 }
 
+// subsystemColor renders the other chip species: outlined rather than
+// filled, so subsystem membership reads differently from genre tags at a
+// glance. same deterministic hue derivation — a subsystem is the same color
+// on every board.
+export function subsystemColor(name: string): LabelColor {
+  const hue = hueOf(name);
+  return {
+    background: "transparent",
+    borderColor: `hsl(${hue}, 55%, 45%)`,
+    color: `hsl(${hue}, 60%, 32%)`,
+  };
+}
+
 function hueOf(tag: string): number {
   let h = 0;
   for (let i = 0; i < tag.length; i++) {

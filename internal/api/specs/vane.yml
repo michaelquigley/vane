@@ -359,6 +359,11 @@ components:
           type: array
           items:
             type: string
+        subsystems:
+          type: array
+          items:
+            type: string
+          description: parts of the stack this item impacts; most projects don't use them.
         source:
           type: string
         milestone:

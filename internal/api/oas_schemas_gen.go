@@ -62,14 +62,16 @@ type Card struct {
 	// Empty when the title could not be read; show the filename.
 	Title string `json:"title"`
 	// Absent when state could not be read; the lane carries the effective placement.
-	State     OptState   `json:"state"`
-	Created   OptString  `json:"created"`
-	Tags      []string   `json:"tags"`
-	Source    OptString  `json:"source"`
-	Milestone OptString  `json:"milestone"`
-	Log       []LogEntry `json:"log"`
-	Flags     []Flag     `json:"flags"`
-	Hash      string     `json:"hash"`
+	State   OptState  `json:"state"`
+	Created OptString `json:"created"`
+	Tags    []string  `json:"tags"`
+	// Parts of the stack this item impacts; most projects don't use them.
+	Subsystems []string   `json:"subsystems"`
+	Source     OptString  `json:"source"`
+	Milestone  OptString  `json:"milestone"`
+	Log        []LogEntry `json:"log"`
+	Flags      []Flag     `json:"flags"`
+	Hash       string     `json:"hash"`
 }
 
 // GetFilename returns the value of Filename.
@@ -95,6 +97,11 @@ func (s *Card) GetCreated() OptString {
 // GetTags returns the value of Tags.
 func (s *Card) GetTags() []string {
 	return s.Tags
+}
+
+// GetSubsystems returns the value of Subsystems.
+func (s *Card) GetSubsystems() []string {
+	return s.Subsystems
 }
 
 // GetSource returns the value of Source.
@@ -145,6 +152,11 @@ func (s *Card) SetCreated(val OptString) {
 // SetTags sets the value of Tags.
 func (s *Card) SetTags(val []string) {
 	s.Tags = val
+}
+
+// SetSubsystems sets the value of Subsystems.
+func (s *Card) SetSubsystems(val []string) {
+	s.Subsystems = val
 }
 
 // SetSource sets the value of Source.

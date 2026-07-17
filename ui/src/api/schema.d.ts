@@ -194,6 +194,8 @@ export interface components {
             state?: components["schemas"]["state"];
             created?: string;
             tags?: string[];
+            /** @description parts of the stack this item impacts; most projects don't use them. */
+            subsystems?: string[];
             source?: string;
             milestone?: string;
             log?: components["schemas"]["logEntry"][];

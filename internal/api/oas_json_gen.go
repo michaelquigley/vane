@@ -191,6 +191,16 @@ func (s *Card) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.Subsystems != nil {
+			e.FieldStart("subsystems")
+			e.ArrStart()
+			for _, elem := range s.Subsystems {
+				e.Str(elem)
+			}
+			e.ArrEnd()
+		}
+	}
+	{
 		if s.Source.Set {
 			e.FieldStart("source")
 			s.Source.Encode(e)
@@ -226,17 +236,18 @@ func (s *Card) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfCard = [10]string{
-	0: "filename",
-	1: "title",
-	2: "state",
-	3: "created",
-	4: "tags",
-	5: "source",
-	6: "milestone",
-	7: "log",
-	8: "flags",
-	9: "hash",
+var jsonFieldsNameOfCard = [11]string{
+	0:  "filename",
+	1:  "title",
+	2:  "state",
+	3:  "created",
+	4:  "tags",
+	5:  "subsystems",
+	6:  "source",
+	7:  "milestone",
+	8:  "log",
+	9:  "flags",
+	10: "hash",
 }
 
 // Decode decodes Card from json.
@@ -311,6 +322,25 @@ func (s *Card) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"tags\"")
 			}
+		case "subsystems":
+			if err := func() error {
+				s.Subsystems = make([]string, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem string
+					v, err := d.Str()
+					elem = string(v)
+					if err != nil {
+						return err
+					}
+					s.Subsystems = append(s.Subsystems, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"subsystems\"")
+			}
 		case "source":
 			if err := func() error {
 				s.Source.Reset()
@@ -349,7 +379,7 @@ func (s *Card) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"log\"")
 			}
 		case "flags":
-			requiredBitSet[1] |= 1 << 0
+			requiredBitSet[1] |= 1 << 1
 			if err := func() error {
 				s.Flags = make([]Flag, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -367,7 +397,7 @@ func (s *Card) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"flags\"")
 			}
 		case "hash":
-			requiredBitSet[1] |= 1 << 1
+			requiredBitSet[1] |= 1 << 2
 			if err := func() error {
 				v, err := d.Str()
 				s.Hash = string(v)
@@ -389,7 +419,7 @@ func (s *Card) Decode(d *jx.Decoder) error {
 	var failures []validate.FieldError
 	for i, mask := range [2]uint8{
 		0b00000011,
-		0b00000011,
+		0b00000110,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
