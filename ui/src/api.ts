@@ -52,6 +52,13 @@ export async function fetchItem(filename: string): Promise<ItemDetail> {
   throw new Error(body?.message ?? `item load failed (${response.status})`);
 }
 
+export async function search(q: string): Promise<string[]> {
+  const { data, error, response } = await client.GET("/search", { params: { query: { q } } });
+  if (data) return data.filenames;
+  const body = error as { message?: string } | undefined;
+  throw new Error(body?.message ?? `search failed (${response.status})`);
+}
+
 export async function capture(title: string, body: string): Promise<Outcome> {
   const { data, error, response } = await client.POST("/items", {
     body: body ? { title, body } : { title },

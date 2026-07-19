@@ -27,6 +27,35 @@ paths:
         default:
           $ref: "#/components/responses/serverError"
 
+  /search:
+    get:
+      operationId: searchItems
+      summary: >
+        case-insensitive substring search over item titles and bodies,
+        against a fresh read of the disk.
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        "200":
+          description: matching item filenames
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [filenames]
+                properties:
+                  filenames:
+                    type: array
+                    items:
+                      type: string
+        default:
+          $ref: "#/components/responses/serverError"
+
   /items:
     post:
       operationId: createItem
@@ -319,7 +348,7 @@ components:
   schemas:
     state:
       type: string
-      enum: [inbox, horizon, researching, building, evaluating, done, dropped]
+      enum: [inbox, horizon, researching, building, evaluating]
 
     flag:
       type: object

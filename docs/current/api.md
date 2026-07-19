@@ -10,6 +10,7 @@ Contract-first: `internal/api/specs/vane.yml` (OpenAPI 3.0.3) is the single sour
 ## the surface
 
 - `GET /board` — lanes in lifecycle order; each card carries filename, title (empty when unreadable — show the filename), its readable state and created date when they exist, tags/subsystems/milestone/source/log, flags, and its content `hash`; each lane carries `rankedCount`, the boundary between the ranked prefix and the computed unranked tail. The board carries `orderVersion` — order.yaml's hash or the `"absent"` sentinel, because absence is a version.
+- `GET /search?q=` — case-insensitive substring search over titles and bodies, computed against a fresh disk read per query; returns matching filenames.
 - `GET /items/{filename}` — raw `content` + parsed card + `hash`; 404 for a name that doesn't exist.
 - `POST /items` — capture into inbox. Empty and empty-slug titles are prevalidated to a typed 400 with no draft file written, so the form keeps its content and the tree stays clean. A slug collision is a 409 carrying the preserved `.capture-` temp path.
 - `PUT /items/{filename}/content` — raw save; a state-changing save runs the ranked-transition cleanup.

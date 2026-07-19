@@ -833,6 +833,20 @@ func (s *SaveContentReq) SetExpectedOrderVersion(val string) {
 	s.ExpectedOrderVersion = val
 }
 
+type SearchItemsOK struct {
+	Filenames []string `json:"filenames"`
+}
+
+// GetFilenames returns the value of Filenames.
+func (s *SearchItemsOK) GetFilenames() []string {
+	return s.Filenames
+}
+
+// SetFilenames sets the value of Filenames.
+func (s *SearchItemsOK) SetFilenames(val []string) {
+	s.Filenames = val
+}
+
 // ServerErrorStatusCode wraps ErrorResponse with StatusCode.
 type ServerErrorStatusCode struct {
 	StatusCode int
@@ -868,8 +882,6 @@ const (
 	StateResearching State = "researching"
 	StateBuilding    State = "building"
 	StateEvaluating  State = "evaluating"
-	StateDone        State = "done"
-	StateDropped     State = "dropped"
 )
 
 // AllValues returns all State values.
@@ -880,8 +892,6 @@ func (State) AllValues() []State {
 		StateResearching,
 		StateBuilding,
 		StateEvaluating,
-		StateDone,
-		StateDropped,
 	}
 }
 
@@ -897,10 +907,6 @@ func (s State) MarshalText() ([]byte, error) {
 	case StateBuilding:
 		return []byte(s), nil
 	case StateEvaluating:
-		return []byte(s), nil
-	case StateDone:
-		return []byte(s), nil
-	case StateDropped:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -924,12 +930,6 @@ func (s *State) UnmarshalText(data []byte) error {
 		return nil
 	case StateEvaluating:
 		*s = StateEvaluating
-		return nil
-	case StateDone:
-		*s = StateDone
-		return nil
-	case StateDropped:
-		*s = StateDropped
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)

@@ -86,6 +86,15 @@ func (UnimplementedHandler) SaveContent(ctx context.Context, req *SaveContentReq
 	return r, ht.ErrNotImplemented
 }
 
+// SearchItems implements searchItems operation.
+//
+// Case-insensitive substring search over item titles and bodies, against a fresh read of the disk.
+//
+// GET /search
+func (UnimplementedHandler) SearchItems(ctx context.Context, params SearchItemsParams) (r *SearchItemsOK, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // TransitionItem implements transitionItem operation.
 //
 // Transition, or transition-and-place when position is given.

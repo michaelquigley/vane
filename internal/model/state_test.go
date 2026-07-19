@@ -9,7 +9,7 @@ func TestParseState(t *testing.T) {
 			t.Errorf("ParseState(%q) = %q, %v; want %q, true", lane, got, ok, lane)
 		}
 	}
-	for _, s := range []string{"", "Inbox", "shipped", "in-progress"} {
+	for _, s := range []string{"", "Inbox", "shipped", "in-progress", "done", "dropped"} {
 		if _, ok := ParseState(s); ok {
 			t.Errorf("ParseState(%q) accepted; want invalid", s)
 		}
@@ -17,7 +17,7 @@ func TestParseState(t *testing.T) {
 }
 
 func TestLaneOrder(t *testing.T) {
-	want := []State{Inbox, Horizon, Researching, Building, Evaluating, Done, Dropped}
+	want := []State{Inbox, Horizon, Researching, Building, Evaluating}
 	if len(LaneOrder) != len(want) {
 		t.Fatalf("LaneOrder has %d lanes, want %d", len(LaneOrder), len(want))
 	}

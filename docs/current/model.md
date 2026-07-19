@@ -9,7 +9,7 @@ created: 2026-07-14
 
 ## states
 
-`State` covers the seven lifecycle states; `LaneOrder` fixes the canonical presentation order: inbox, horizon, researching, building, evaluating, done, dropped. `ParseState` accepts exactly those seven strings and nothing else.
+`State` covers the five lifecycle states; `LaneOrder` fixes the canonical presentation order: inbox, horizon, researching, building, evaluating. `ParseState` accepts exactly those five strings and nothing else. The lifecycle ends at evaluating — there are no terminal lanes (design change 2026-07-18, retiring v1's `done`/`dropped`): an item is a prompt, and a realized prompt is deleted with its information synthesized into the project, exactly as a realized spec leaves `docs/future/`.
 
 ## the slug rule
 

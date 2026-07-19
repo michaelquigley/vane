@@ -76,6 +76,12 @@ type Invoker interface {
 	//
 	// PUT /items/{filename}/content
 	SaveContent(ctx context.Context, request *SaveContentReq, params SaveContentParams) (SaveContentRes, error)
+	// SearchItems invokes searchItems operation.
+	//
+	// Case-insensitive substring search over item titles and bodies, against a fresh read of the disk.
+	//
+	// GET /search
+	SearchItems(ctx context.Context, params SearchItemsParams) (*SearchItemsOK, error)
 	// TransitionItem invokes transitionItem operation.
 	//
 	// Transition, or transition-and-place when position is given.
@@ -839,6 +845,98 @@ func (c *Client) sendSaveContent(ctx context.Context, request *SaveContentReq, p
 
 	stage = "DecodeResponse"
 	result, err := decodeSaveContentResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// SearchItems invokes searchItems operation.
+//
+// Case-insensitive substring search over item titles and bodies, against a fresh read of the disk.
+//
+// GET /search
+func (c *Client) SearchItems(ctx context.Context, params SearchItemsParams) (*SearchItemsOK, error) {
+	res, err := c.sendSearchItems(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendSearchItems(ctx context.Context, params SearchItemsParams) (res *SearchItemsOK, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("searchItems"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.URLTemplateKey.String("/search"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, SearchItemsOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/search"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeQueryParams"
+	q := uri.NewQueryEncoder()
+	{
+		// Encode "q" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "q",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			return e.EncodeValue(conv.StringToString(params.Q))
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
+	u.RawQuery = q.Values().Encode()
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer body.Close()
+
+	stage = "DecodeResponse"
+	result, err := decodeSearchItemsResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

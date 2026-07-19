@@ -10,7 +10,7 @@ import {
   type DragOverEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
-import { fetchBoard, transition, reorder, type Board, type Card, type Conflict, type Outcome, type State } from "./api";
+import { fetchBoard, search, transition, reorder, type Board, type Card, type Conflict, type Outcome, type State } from "./api";
 import { anchorFor, positionAfterDrop, rankedAfterDrop } from "./reorder";
 import { CardBody, LaneColumn } from "./LaneColumn";
 import { ItemModal } from "./ItemModal";
@@ -28,6 +28,8 @@ export default function App() {
   const [tagFilter, setTagFilter] = useState<string[]>([]);
   const [subsystemFilter, setSubsystemFilter] = useState<string[]>([]);
   const [milestoneFilter, setMilestoneFilter] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [searchMatches, setSearchMatches] = useState<Set<string> | null>(null);
   // server truth as of drag start: the optimistic board mutates freely
   // during the drag, and this is what gestures compute against and what a
   // canceled or failed drop restores.
@@ -51,6 +53,24 @@ export default function App() {
       document.title = `${board.project} — vane`;
     }
   }, [board?.project]);
+
+  // debounced title/body search against a fresh server-side read; the
+  // match set is one more composable filter.
+  useEffect(() => {
+    const q = query.trim();
+    if (!q) {
+      setSearchMatches(null);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        setSearchMatches(new Set(await search(q)));
+      } catch (err) {
+        setNotice(err instanceof Error ? err.message : String(err));
+      }
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [query]);
 
   // the shared outcome path for gestures resolved at board level:
   // item_conflict and order_conflict mean the view went stale — reload
@@ -153,9 +173,10 @@ export default function App() {
       // filter, the card lands directly beside the visible card it was
       // dropped against, and hidden neighbors stay where they are. the
       // gesture itself still computes against the pre-drag server truth.
-      const isFiltering = tagFilter.length > 0 || subsystemFilter.length > 0 || milestoneFilter !== null;
+      const isFiltering =
+        tagFilter.length > 0 || subsystemFilter.length > 0 || milestoneFilter !== null || searchMatches !== null;
       const displayedBoard = isFiltering
-        ? filterBoard(working, tagFilter, subsystemFilter, milestoneFilter)
+        ? filterBoard(working, tagFilter, subsystemFilter, milestoneFilter, searchMatches)
         : working;
       const displayedLane = displayedBoard.lanes.find((l) => l.state === cur.lane.state);
       const anchor = anchorFor(displayedLane?.cards.map((c) => c.filename) ?? [], activeId, overId);
@@ -178,7 +199,7 @@ export default function App() {
         snapshot,
       );
     },
-    [board, preDrag, finishDrag, tagFilter, subsystemFilter, milestoneFilter],
+    [board, preDrag, finishDrag, tagFilter, subsystemFilter, milestoneFilter, searchMatches],
   );
 
   const toggleTag = useCallback((tag: string) => {
@@ -215,8 +236,9 @@ export default function App() {
   // tag and the selected milestone. drags stay live: placement is
   // anchor-based, so a filtered drop lands beside the visible card it was
   // dropped against.
-  const filtering = tagFilter.length > 0 || subsystemFilter.length > 0 || milestoneFilter !== null;
-  const shown = filtering ? filterBoard(board, tagFilter, subsystemFilter, milestoneFilter) : board;
+  const filtering =
+    tagFilter.length > 0 || subsystemFilter.length > 0 || milestoneFilter !== null || searchMatches !== null;
+  const shown = filtering ? filterBoard(board, tagFilter, subsystemFilter, milestoneFilter, searchMatches) : board;
 
   return (
     <div className="app">
@@ -226,6 +248,15 @@ export default function App() {
         </span>
         <h1 className="project-name">{board.project}</h1>
         <CaptureIcon onClick={() => setCaptureOpen(true)} />
+        <input
+          className="search-box"
+          placeholder="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") setQuery("");
+          }}
+        />
         {filtering && (
           <div className="filter-bar">
             <span className="dim">filtering:</span>
@@ -351,11 +382,18 @@ function locateTarget(board: Board, overId: string): Located | null {
 // and the selected milestone. rankedCount shrinks to the surviving members
 // of the ranked prefix so the boundary rule still lands between ranked and
 // unranked cards.
-function filterBoard(board: Board, tags: string[], subsystems: string[], milestone: string | null): Board {
+function filterBoard(
+  board: Board,
+  tags: string[],
+  subsystems: string[],
+  milestone: string | null,
+  searchMatches: Set<string> | null,
+): Board {
   const matches = (c: Card) =>
     tags.every((t) => (c.tags ?? []).includes(t)) &&
     subsystems.every((s) => (c.subsystems ?? []).includes(s)) &&
-    (milestone === null || c.milestone === milestone);
+    (milestone === null || c.milestone === milestone) &&
+    (searchMatches === null || searchMatches.has(c.filename));
   return {
     ...board,
     lanes: board.lanes.map((lane) => ({

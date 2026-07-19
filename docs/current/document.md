@@ -17,7 +17,7 @@ A hand line-scanner does the one job only it can: the key → line-range map for
 
 `ParseItem` always returns a document — malformed is a verdict, not a blackout. The frontmatter fence splits by hand (`---` open, `---` or `...` close, body preserved verbatim); each claimed field decodes and validates independently, so an item with a valid `state: researching` and broken `tags:` stays in the researching lane, flagged, with title and created intact. A card's state is unreadable only when `state:` itself fails.
 
-Malformed per the spec's table: unparseable frontmatter, a duplicate claimed key, a missing required field, a claimed field violating its shape (state outside the seven, dates not `YYYY-MM-DD`, wrong structural types). Diagnostics accumulate rather than short-circuit.
+Malformed per the spec's table: unparseable frontmatter, a duplicate claimed key, a missing required field, a claimed field violating its shape (state outside the five, dates not `YYYY-MM-DD`, wrong structural types). Diagnostics accumulate rather than short-circuit.
 
 Patches: `SetState` and `SetTitle` replace the field's complete mapped line range — a block-scalar title's continuation lines go with it — preserving indentation and the key line's inline comment, touching nothing else. A duplicated or missing field refuses to patch (repair is a raw edit). Scalar values emit through one shared helper, plain when unambiguously safe, double-quoted otherwise, shared with order entry emission and (later) capture skeletons.
 

@@ -56,6 +56,9 @@ func TestParseItemValid(t *testing.T) {
 	if len(d.Log) != 1 || d.Log[0].Stamp != "2026-07-13" || d.Log[0].Note != "spec drawn" {
 		t.Errorf("log = %v", d.Log)
 	}
+	if d.Body() != "\nbody prose here.\n\nmore body.\n" {
+		t.Errorf("body = %q", d.Body())
+	}
 }
 
 func TestSetStateSurgical(t *testing.T) {

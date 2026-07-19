@@ -297,6 +297,29 @@ func (s *ReorderLaneReq) Validate() error {
 	return nil
 }
 
+func (s *SearchItemsOK) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
+	var failures []validate.FieldError
+	if err := func() error {
+		if s.Filenames == nil {
+			return errors.New("nil is invalid value")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "filenames",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
 func (s State) Validate() error {
 	switch s {
 	case "inbox":
@@ -308,10 +331,6 @@ func (s State) Validate() error {
 	case "building":
 		return nil
 	case "evaluating":
-		return nil
-	case "done":
-		return nil
-	case "dropped":
 		return nil
 	default:
 		return errors.Errorf("invalid value: %v", s)

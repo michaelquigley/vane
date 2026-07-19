@@ -95,8 +95,8 @@ func TestGetBoard(t *testing.T) {
 	if board.OrderVersion != document.Hash([]byte(orderFixture)) {
 		t.Errorf("orderVersion = %s", board.OrderVersion)
 	}
-	if len(board.Lanes) != 7 {
-		t.Fatalf("lanes = %d, want 7", len(board.Lanes))
+	if len(board.Lanes) != 5 {
+		t.Fatalf("lanes = %d, want 5", len(board.Lanes))
 	}
 	researching := laneOf(t, board, api.StateResearching)
 	if researching.RankedCount != 1 || len(researching.Cards) != 1 {
@@ -122,6 +122,34 @@ func TestGetBoardAbsentOrderVersion(t *testing.T) {
 	}
 	if board.OrderVersion != document.VersionAbsent {
 		t.Errorf("orderVersion = %s, want the absent sentinel", board.OrderVersion)
+	}
+}
+
+func TestSearchItems(t *testing.T) {
+	s, _ := fixture(t, true)
+	tests := []struct {
+		q    string
+		want []string
+	}{
+		{"RETRY", []string{"retry-semantics.md"}},
+		{"retry body", []string{"retry-semantics.md"}},
+		{"board", []string{"board-capture.md"}},
+		{"nothing-matches-this", []string{}},
+	}
+	for _, tt := range tests {
+		res, err := s.SearchItems(context.Background(), api.SearchItemsParams{Q: tt.q})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(res.Filenames) != len(tt.want) {
+			t.Errorf("search %q = %v, want %v", tt.q, res.Filenames, tt.want)
+			continue
+		}
+		for i, f := range tt.want {
+			if res.Filenames[i] != f {
+				t.Errorf("search %q = %v, want %v", tt.q, res.Filenames, tt.want)
+			}
+		}
 	}
 }
 

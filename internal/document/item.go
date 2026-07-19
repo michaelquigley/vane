@@ -60,8 +60,18 @@ type ItemDoc struct {
 	Malformed   bool
 	Diagnostics []string
 
-	lines []string
-	spans map[string]fieldSpan
+	lines     []string
+	spans     map[string]fieldSpan
+	bodyStart int
+}
+
+// Body returns everything after the frontmatter fence, verbatim. a document
+// with no parseable fence is all body.
+func (d *ItemDoc) Body() string {
+	if d.bodyStart <= 0 || d.bodyStart > len(d.lines) {
+		return strings.Join(d.lines, "\n")
+	}
+	return strings.Join(d.lines[d.bodyStart:], "\n")
 }
 
 // ParseItem parses raw as an item document. it always returns a document —
@@ -89,6 +99,7 @@ func ParseItem(raw []byte) *ItemDoc {
 		d.flaw("unterminated frontmatter fence")
 		return d
 	}
+	d.bodyStart = fenceClose + 1
 
 	yamlText := strings.Join(d.lines[1:fenceClose], "\n")
 	entries, err := parseMapping(yamlText)

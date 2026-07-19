@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+CHANGE: the lifecycle ends at evaluating — `done` and `dropped` are retired (a recorded design change from pilot experience). An item is a prompt: realized or declined prompts are deleted via the delete gesture, their information synthesized into the project first; git history keeps the archaeology, and the board never accumulates terminal residue. Existing `state: done`/`dropped` items surface as malformed-flagged cards in inbox for re-triage or deletion.
+
+FEATURE: search — a header search box backed by `GET /search?q=`: case-insensitive substring match over item titles and bodies against a fresh disk read (no index, no store), debounced in the client, with the match set composing with tag/subsystem/milestone filters. Escape clears.
+
 FEATURE: `subsystems:` — a second optional claimed list field naming the parts of the stack an item impacts, for combined projects with distinguishable parts. Rendered as outlined mono chips (visibly a different species from the solid genre tags), AND-filterable like tags and composing with tag and milestone filters; shown in the item modal's metadata block. Schema addition recorded in the grimoire's roadmap-convention note.
 
 ## v0.1.1

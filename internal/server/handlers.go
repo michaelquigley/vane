@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"git.hq.quigley.com/products/vane/internal/api"
 	"git.hq.quigley.com/products/vane/internal/model"
@@ -35,6 +36,21 @@ func cardFor(snap *workspace.Snapshot, filename string) model.CardInput {
 		}
 	}
 	return model.CardInput{Filename: filename}
+}
+
+func (s *Server) SearchItems(_ context.Context, params api.SearchItemsParams) (*api.SearchItemsOK, error) {
+	snap, err := s.w.Load()
+	if err != nil {
+		return nil, err
+	}
+	q := strings.ToLower(params.Q)
+	out := &api.SearchItemsOK{Filenames: []string{}}
+	for _, it := range snap.Items {
+		if strings.Contains(strings.ToLower(it.Doc.Title), q) || strings.Contains(strings.ToLower(it.Doc.Body()), q) {
+			out.Filenames = append(out.Filenames, it.Filename)
+		}
+	}
+	return out, nil
 }
 
 func (s *Server) CreateItem(_ context.Context, req *api.CreateItemReq) (api.CreateItemRes, error) {

@@ -57,6 +57,12 @@ type Handler interface {
 	//
 	// PUT /items/{filename}/content
 	SaveContent(ctx context.Context, req *SaveContentReq, params SaveContentParams) (SaveContentRes, error)
+	// SearchItems implements searchItems operation.
+	//
+	// Case-insensitive substring search over item titles and bodies, against a fresh read of the disk.
+	//
+	// GET /search
+	SearchItems(ctx context.Context, params SearchItemsParams) (*SearchItemsOK, error)
 	// TransitionItem implements transitionItem operation.
 	//
 	// Transition, or transition-and-place when position is given.
