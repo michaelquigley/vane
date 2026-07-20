@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/michaelquigley/ranger/internal/api"
 	"github.com/michaelquigley/ranger/internal/server"
+	"github.com/michaelquigley/ranger/internal/workspace"
 	"github.com/michaelquigley/ranger/ui"
 )
 
@@ -40,8 +42,14 @@ func newServeCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			// /roadmap/ serves the roadmap directory's files read-only, so
+			// relative image and attachment references in item bodies
+			// resolve the way Obsidian and GitHub read them.
+			mux := http.NewServeMux()
+			mux.Handle("/roadmap/", http.StripPrefix("/roadmap/", server.Assets(filepath.Join(w.Root(), workspace.RoadmapRel))))
+			mux.Handle("/", ui.Middleware(apiServer))
 			addr := net.JoinHostPort("127.0.0.1", fmt.Sprintf("%d", port))
-			httpServer := &http.Server{Addr: addr, Handler: ui.Middleware(apiServer)}
+			httpServer := &http.Server{Addr: addr, Handler: mux}
 
 			errCh := make(chan error, 1)
 			go func() {

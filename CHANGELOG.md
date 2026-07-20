@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+FEATURE: item bodies can reference images and attachments relative to the roadmap directory (`images/sketch.png`) and the board displays them — a read-only `/roadmap/` route serves the roadmap directory's files (fresh disk read per request, files only, root-confined: no symlink or dot-prefixed path component is ever served), and the item modal resolves relative markdown urls against it, matching how Obsidian and GitHub read the same links.
+
 FIX: cross-lane drops no longer reshuffle the destination lane after release. Same-lane hover moves only dnd-kit transforms — board state kept the card at its lane-entry slot — so the release frame rendered it mis-placed, then the whole lane animated into position when the server responded. The cross-lane path now repaints the placement synchronously before awaiting the server (`optimisticPlaced`, the twin of the within-lane path's `optimisticRanked`), so the release frame already shows the final arrangement and the response confirms it with nothing left to move.
 
 CHANGE: the binoculars mark is redrawn — the first drawing's solid objective discs read closer to owl face than field glasses. Now a front three-quarter view (ring objectives, barrels receding up-inward to the eyepieces, hinge wheel between), with masked separation gaps so the mark stays crisp on any tab background. Favicon and header mark share the drawing.

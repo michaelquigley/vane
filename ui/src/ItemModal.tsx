@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { roadmapUrl } from "./markdown";
 import {
   deleteItem,
   fetchItem,
@@ -270,7 +271,7 @@ export function ItemModal({
         <>
           <div className="item-body">
             {bodyOf(item.content).trim() ? (
-              <Markdown remarkPlugins={[remarkGfm]}>{bodyOf(item.content)}</Markdown>
+              <Markdown remarkPlugins={[remarkGfm]} urlTransform={roadmapUrl}>{bodyOf(item.content)}</Markdown>
             ) : (
               <p className="dim">no body.</p>
             )}

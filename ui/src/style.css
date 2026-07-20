@@ -285,6 +285,10 @@ textarea {
   margin-top: 0;
 }
 
+.item-body img {
+  max-width: 100%;
+}
+
 .item-body h1,
 .item-body h2,
 .item-body h3 {

@@ -12,8 +12,8 @@ function Icon({ d, label, onClick }: { d: string; label: string; onClick: () => 
 }
 
 // RangerMark is the binoculars mark — the same drawing as the favicon.
-// Front three-quarter view: ring objectives, barrels receding up-inward,
-// hinge wheel. The masks carve the separation gaps so the drawing stays
+// front three-quarter view: ring objectives, barrels receding up-inward,
+// hinge wheel. the masks carve the separation gaps so the drawing stays
 // legible on any background.
 export function RangerMark() {
   return (
