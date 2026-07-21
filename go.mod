@@ -1,11 +1,12 @@
 module github.com/michaelquigley/ranger
 
-go 1.26
+go 1.26.2
 
 require (
 	github.com/go-faster/errors v0.7.1
 	github.com/go-faster/jx v1.2.0
 	github.com/michaelquigley/df v1.0.2
+	github.com/michaelquigley/dfw v0.1.0
 	github.com/michaelquigley/push v0.2.1
 	github.com/ogen-go/ogen v1.23.0
 	github.com/spf13/cobra v1.10.2
@@ -16,6 +17,7 @@ require (
 )
 
 require (
+	fyne.io/systray v1.12.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/dlclark/regexp2 v1.12.0 // indirect
 	github.com/fatih/color v1.19.0 // indirect
@@ -23,6 +25,7 @@ require (
 	github.com/go-faster/yaml v0.4.6 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
+	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
