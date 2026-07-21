@@ -29,6 +29,10 @@ The daemon reads the config fresh on every request — the same fresh-from-disk 
 
 dfw's tray mode (`dfw/tray` — deliberately not the webview, so the binary keeps building without CGO or native webview headers), with the binoculars mark as the icon — a tray-simplified variant of the favicon drawing (`cmd/ranger/tray-icon.svg` beside its rendered `tray-icon.png`, `go:embed`ded): light monochrome to sit with the panel's symbolic icons, hinge ring and highlight arcs dropped since they melt below 24px, rendered at 128px so the panel's downscale stays smooth. The menu is minimal: **open board** — the operator's default browser at the board URL (`xdg-open` on linux; `rundll32.exe url.dll,FileProtocolHandler` on windows, where the entry point is part of the argv) — and dfw's built-in quit. Opening is not window management: the daemon fires the URL and the browser does the rest. Multiple windows are expected and free — every window is a browser tab pointed at a project URL, navigating independently through the selector; the daemon neither knows nor cares how many exist.
 
+## the desktop entry
+
+`ranger desktop integrate` installs the linux launcher surface: a FreeDesktop entry (under `$XDG_DATA_HOME/applications`, defaulting to `~/.local/share/applications`) whose `Exec` launches `ranger daemon` from the resolved binary path, plus the brand-blue mark rendered into the hicolor icon theme at 32/48/192/512 — committed PNGs from `favicon.svg`, embedded in the binary, so a plain `go build` carries them. The id is `com.michaelquigley.ranger` — reverse-DNS, matching the tray AppID, so a user-level `ranger.desktop` never shadows the ranger file manager's system entry on machines that carry it. No `StartupWMClass`: the browser owns every window, so there is no ranger-owned window to match. `ranger desktop remove` deletes exactly the files integrate installs, silently skipping any already gone.
+
 ## error by tier
 
 Recorded deliberately; a failure handled at the wrong tier is a review finding.

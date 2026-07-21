@@ -3,6 +3,7 @@ horizon:
   - cross-repo-aggregation.md
   - richer-log.md
 researching:
+  - dirty-git-highlights.md
   - live-board-reload.md
 inbox:
 building:

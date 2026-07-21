@@ -41,7 +41,7 @@ func newRootCmd() *cobra.Command {
 		},
 	}
 	cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "enable verbose output")
-	cmd.AddCommand(newServeCmd(), newDaemonCmd(), newListCmd(), newStateCmd(), build.NewVersionCmd("ranger"))
+	cmd.AddCommand(newServeCmd(), newDaemonCmd(), newDesktopCmd(), newListCmd(), newStateCmd(), build.NewVersionCmd("ranger"))
 	return cmd
 }
 

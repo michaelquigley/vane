@@ -34,6 +34,7 @@ The composite-gesture suite asserts each of these against the whole tree: exactl
 - `ranger list` — lanes in lifecycle order, ranked prefix numbered, unranked tail dashed, flags marked inline. A plain renderer over the same `ComputeBoard` output the UI will consume.
 - `ranger state <filename|slug> <state>` — the transition gesture from the terminal (`.md` optional). No placement; the card lands unranked in its new lane.
 - `ranger serve` — the ad-hoc localhost board over the discovered root; `ranger daemon` — the tray-resident board over every configured root ([daemon.md](daemon.md)). Serve is the daemon's single-project degenerate case: one server implementation, two entry commands.
+- `ranger desktop integrate` / `ranger desktop remove` — install or remove the linux launcher entry and hicolor icons; the entry launches `ranger daemon` ([daemon.md](daemon.md)).
 - `ranger version` — build info. `-v/--verbose` re-inits `dl` at debug.
 
 The capture, `list`, and `state` gestures remain cwd-discovery in-repo gestures and never consult the daemon's config — the CLI's create-on-demand capture keeps its directory-creating behavior, because in-repo, discovery *is* the addressing.

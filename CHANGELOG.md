@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+FEATURE: `ranger desktop integrate` installs the linux launcher surface — a FreeDesktop entry that starts `ranger daemon`, plus the binoculars mark rendered into the hicolor icon theme at four sizes. The id is reverse-DNS (`com.michaelquigley.ranger`), matching the tray AppID and never shadowing the ranger file manager's system entry. `ranger desktop remove` deletes exactly what integrate installed.
+
 ## v0.1.1
 
 FEATURE: `ranger daemon` — the tray-resident serving story: one process serving every root named in `~/.config/ranger/config.yaml` (hand-edited, read-only, re-read fresh per request so edits land without a restart), with the binoculars mark in the tray and a two-item menu — `open board` firing the default browser at the board URL, and quit. The board grows a project selector in the header: the project lives in the URL (`/p/{name}`, bare `/` redirecting to the configured default), available projects list by name, unavailable ones stay visible flagged with their diagnostic, and a broken project shows its error in the body region under a live header — never a page-replacing panel — so healthy projects stay one click away. A broken root degrades and heals per request; only the daemon's own config and port fail-fast at startup. `ranger serve` is unchanged in spirit: the same server, synthesized down to one discovered project, no tray. No webview, no CGO — browser windows are the window manager.
