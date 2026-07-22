@@ -3,9 +3,9 @@ horizon:
   - cross-repo-aggregation.md
   - richer-log.md
 researching:
-  - live-board-reload.md
 inbox:
 building:
+  - live-board-reload.md
 evaluating:
   - dirty-git-highlights.md
   - desktop-integration.md
