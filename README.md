@@ -2,7 +2,7 @@
 
 ![the ranger interface](docs/images/ranger.png)
 
-A roadmap that lives in your repository as plain markdown files, plus a Go reader tool — CLI capture, a localhost board, and a tray-resident daemon serving every repo you range across — for working with it. The convention is the product; the tool is a reader. One binary, no database, and it never touches git.
+A roadmap that lives in your repository as plain markdown files, plus a Go reader tool — CLI capture, a localhost board, and a tray-resident daemon serving every repo you range across — for working with it. The convention is the product; the tool is a reader. One binary, no database, and it never writes to git.
 
 ## The idea
 
@@ -52,13 +52,13 @@ Capture is the root command. `ranger retry semantics v2` opens your editor (`RAN
 
 `ranger daemon` is how the board is meant to live day-to-day: a tray process that knows every root you care about and serves all of them from `http://127.0.0.1:4114`. The config is one hand-edited file, `~/.config/ranger/config.yaml`, naming repository roots; it's re-read fresh on every request, so edits land without a restart. The tray menu is **open board** and quit — every board window is just a browser tab at `/p/{project}`, and a selector in the header switches between projects. A root that moves or breaks degrades to a flagged entry with its error shown plainly, and heals the moment the disk does; the daemon never dies because one repo moved. On linux, `ranger desktop integrate` puts the daemon in your launcher — a desktop entry plus icons — and `ranger desktop remove` takes it back out.
 
-The board itself: five lanes in lifecycle order, embedded in the binary and fully offline (fonts, icons, everything). Dragging a card between lanes patches its `state:` line; dragging within a lane rewrites the ranked prefix; drops are anchor-placed, so reordering works correctly even under active filters. The board filters by tag, subsystem, and milestone, searches titles and bodies against a fresh disk read, and opens each item in a modal: rendered markdown, in-place retitle, raw-bytes edit, and deletion behind a confirm. Freshness is a manual browser refresh — every request re-reads the disk, so there is nothing to go stale.
+The board itself: five lanes in lifecycle order, embedded in the binary and fully offline (fonts, icons, everything). Dragging a card between lanes patches its `state:` line; dragging within a lane rewrites the ranked prefix; drops are anchor-placed, so reordering works correctly even under active filters. The board filters by tag, subsystem, and milestone, searches titles and bodies against a fresh disk read, and opens each item in a modal: rendered markdown, in-place retitle, raw-bytes edit, and deletion behind a confirm. Freshness is a manual browser refresh — every request re-reads the disk, so there is nothing to go stale. Cards with uncommitted changes carry a quiet amber edge, and the project selector marks dirty boards with the git vernacular's `*` — one glance answers whether everything you range across is committed.
 
 `ranger serve` is the same server, ad-hoc: run it anywhere inside a repo — no config, no tray — and get that one project's board, ctrl-C when done. `ranger list` prints the board in the terminal, ranked prefix numbered and flags inline; `ranger state <filename|slug> <state>` transitions an item from the command line. The CLI gestures never consult the daemon's config: in-repo, discovery is the addressing.
 
 ## Load-bearing rules
 
-- **The tool never touches git.** No git imports anywhere; all persistence is working-tree file writes, and the operator owns history.
+- **The tool never writes git.** All persistence is working-tree file writes, and the operator owns history. Reading is the one exception — a read-only `git status` powers the uncommitted highlights — and ranger stays a reader: it never stages, commits, or pushes anything.
 - **Parsed reads, hand-patched writes.** ranger reads through a YAML parser but writes by surgical byte-level line patching — never a decode-and-encode cycle. Your comments, spacing, and unknown fields survive every gesture.
 - **Guarded gestures.** Every write verifies the file's hash against the snapshot the gesture was computed from; a mismatch is a conflict and a reload, never a blind retry.
 - **The convention is primary.** Nothing about the format exists only in the tool's understanding — the files are fully legible, and editable, without ranger present.

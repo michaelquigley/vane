@@ -76,7 +76,7 @@ func asConflict(err error) (*api.Conflict, bool) {
 	return nil, false
 }
 
-func wireCard(snap *workspace.Snapshot, c model.CardInput) api.Card {
+func wireCard(snap *workspace.Snapshot, git workspace.GitStatus, c model.CardInput) api.Card {
 	card := api.Card{
 		Filename: c.Filename,
 		Title:    c.Title,
@@ -105,12 +105,19 @@ func wireCard(snap *workspace.Snapshot, c model.CardInput) api.Card {
 			card.Log = append(card.Log, api.LogEntry{Stamp: l.Stamp, Note: l.Note})
 		}
 	}
+	// absent when git can't answer: unknown never masquerades as clean.
+	if git.Known {
+		card.Dirty = api.NewOptBool(git.Files[c.Filename])
+	}
 	return card
 }
 
-func wireBoard(snap *workspace.Snapshot, project string) *api.Board {
+func wireBoard(snap *workspace.Snapshot, git workspace.GitStatus, project string) *api.Board {
 	board := snap.Board()
 	out := &api.Board{Project: project, OrderVersion: snap.OrderVersion}
+	if git.Known {
+		out.Dirty = api.NewOptBool(git.Dirty)
+	}
 	for _, lane := range board.Lanes {
 		wl := api.Lane{
 			State:       api.State(lane.State),
@@ -118,7 +125,7 @@ func wireBoard(snap *workspace.Snapshot, project string) *api.Board {
 			RankedCount: lane.RankedCount,
 		}
 		for _, c := range lane.Cards {
-			wl.Cards = append(wl.Cards, wireCard(snap, c))
+			wl.Cards = append(wl.Cards, wireCard(snap, git, c))
 		}
 		out.Lanes = append(out.Lanes, wl)
 	}
@@ -126,12 +133,13 @@ func wireBoard(snap *workspace.Snapshot, project string) *api.Board {
 }
 
 // freshBoard reloads from disk after a mutation so the client repaints from
-// disk truth, never from what the mutation thinks it did. project is the
-// configured name, carried onto the wire.
+// disk truth, never from what the mutation thinks it did — the git verdict
+// included, so a gesture's own dirt shows in the same repaint. project is
+// the configured name, carried onto the wire.
 func freshBoard(w *workspace.Workspace, project string) (*api.Board, error) {
 	snap, err := w.Load()
 	if err != nil {
 		return nil, err
 	}
-	return wireBoard(snap, project), nil
+	return wireBoard(snap, w.GitStatus(), project), nil
 }

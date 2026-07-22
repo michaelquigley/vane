@@ -19,6 +19,9 @@ type Board struct {
 	Lanes   []Lane `json:"lanes"`
 	// Order.yaml's hash, or the sentinel "absent". absence is a version.
 	OrderVersion string `json:"orderVersion"`
+	// True when anything under the roadmap directory is uncommitted in git — items, order.yaml, and
+	// assets alike; absent when git can't answer.
+	Dirty OptBool `json:"dirty"`
 }
 
 // GetProject returns the value of Project.
@@ -36,6 +39,11 @@ func (s *Board) GetOrderVersion() string {
 	return s.OrderVersion
 }
 
+// GetDirty returns the value of Dirty.
+func (s *Board) GetDirty() OptBool {
+	return s.Dirty
+}
+
 // SetProject sets the value of Project.
 func (s *Board) SetProject(val string) {
 	s.Project = val
@@ -49,6 +57,11 @@ func (s *Board) SetLanes(val []Lane) {
 // SetOrderVersion sets the value of OrderVersion.
 func (s *Board) SetOrderVersion(val string) {
 	s.OrderVersion = val
+}
+
+// SetDirty sets the value of Dirty.
+func (s *Board) SetDirty(val OptBool) {
+	s.Dirty = val
 }
 
 func (*Board) deleteItemRes()     {}
@@ -73,6 +86,9 @@ type Card struct {
 	Log        []LogEntry `json:"log"`
 	Flags      []Flag     `json:"flags"`
 	Hash       string     `json:"hash"`
+	// True when the item's file is uncommitted in git — modified, staged, or untracked alike; absent
+	// when git can't answer (no git binary, no repository).
+	Dirty OptBool `json:"dirty"`
 }
 
 // GetFilename returns the value of Filename.
@@ -130,6 +146,11 @@ func (s *Card) GetHash() string {
 	return s.Hash
 }
 
+// GetDirty returns the value of Dirty.
+func (s *Card) GetDirty() OptBool {
+	return s.Dirty
+}
+
 // SetFilename sets the value of Filename.
 func (s *Card) SetFilename(val string) {
 	s.Filename = val
@@ -183,6 +204,11 @@ func (s *Card) SetFlags(val []Flag) {
 // SetHash sets the value of Hash.
 func (s *Card) SetHash(val string) {
 	s.Hash = val
+}
+
+// SetDirty sets the value of Dirty.
+func (s *Card) SetDirty(val OptBool) {
+	s.Dirty = val
 }
 
 // Ref: #/components/schemas/conflict
@@ -583,6 +609,52 @@ func (s *LogEntry) SetNote(val string) {
 	s.Note = val
 }
 
+// NewOptBool returns new OptBool with value set to v.
+func NewOptBool(v bool) OptBool {
+	return OptBool{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptBool is optional bool.
+type OptBool struct {
+	Value bool
+	Set   bool
+}
+
+// IsSet returns true if OptBool was set.
+func (o OptBool) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptBool) Reset() {
+	var v bool
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptBool) SetTo(v bool) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptBool) Get() (v bool, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptBool) Or(d bool) bool {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptInt returns new OptInt with value set to v.
 func NewOptInt(v int) OptInt {
 	return OptInt{
@@ -753,6 +825,8 @@ type ProjectStatus struct {
 	Available bool   `json:"available"`
 	// The repository-level error for an unavailable root.
 	Error OptString `json:"error"`
+	// The board's uncommitted verdict, judged per project at index time; absent when git can't answer.
+	Dirty OptBool `json:"dirty"`
 }
 
 // GetName returns the value of Name.
@@ -770,6 +844,11 @@ func (s *ProjectStatus) GetError() OptString {
 	return s.Error
 }
 
+// GetDirty returns the value of Dirty.
+func (s *ProjectStatus) GetDirty() OptBool {
+	return s.Dirty
+}
+
 // SetName sets the value of Name.
 func (s *ProjectStatus) SetName(val string) {
 	s.Name = val
@@ -783,6 +862,11 @@ func (s *ProjectStatus) SetAvailable(val bool) {
 // SetError sets the value of Error.
 func (s *ProjectStatus) SetError(val OptString) {
 	s.Error = val
+}
+
+// SetDirty sets the value of Dirty.
+func (s *ProjectStatus) SetDirty(val OptBool) {
+	s.Dirty = val
 }
 
 type RenameToSlugBadRequest ErrorResponse

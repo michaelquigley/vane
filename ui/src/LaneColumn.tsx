@@ -66,7 +66,7 @@ function CardView({
   };
   return (
     <div
-      className="card"
+      className={card.dirty ? "card card-dirty" : "card"}
       ref={setNodeRef}
       style={style}
       {...attributes}

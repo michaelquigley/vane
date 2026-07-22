@@ -248,6 +248,8 @@ export interface components {
             log?: components["schemas"]["logEntry"][];
             flags: components["schemas"]["flag"][];
             hash: string;
+            /** @description true when the item's file is uncommitted in git — modified, staged, or untracked alike; absent when git can't answer (no git binary, no repository). */
+            dirty?: boolean;
         };
         lane: {
             state: components["schemas"]["state"];
@@ -261,12 +263,16 @@ export interface components {
             lanes: components["schemas"]["lane"][];
             /** @description order.yaml's hash, or the sentinel "absent". absence is a version. */
             orderVersion: string;
+            /** @description true when anything under the roadmap directory is uncommitted in git — items, order.yaml, and assets alike; absent when git can't answer. */
+            dirty?: boolean;
         };
         projectStatus: {
             name: string;
             available: boolean;
             /** @description the repository-level error for an unavailable root. */
             error?: string;
+            /** @description the board's uncommitted verdict, judged per project at index time; absent when git can't answer. */
+            dirty?: boolean;
         };
         projectIndex: {
             projects: components["schemas"]["projectStatus"][];

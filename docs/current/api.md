@@ -11,7 +11,7 @@ The contract is project-scoped: every operation except the index lives under `/p
 
 ## the surface
 
-- `GET /projects` — the project index: each configured project's name and availability (`available` plus an `error` diagnostic for a root that failed its load, judged by a fresh load at request time), and which project is the default. This is what the selector renders, and what the bare `/` consults to redirect.
+- `GET /projects` — the project index: each configured project's name and availability (`available` plus an `error` diagnostic for a root that failed its load, judged by a fresh load at request time), its `dirty` verdict where git can answer, and which project is the default. This is what the selector renders, and what the bare `/` consults to redirect.
 - `GET /projects/{project}/board` — lanes in lifecycle order; each card carries filename, title (empty when unreadable — show the filename), its readable state and created date when they exist, tags/subsystems/milestone/source/log, flags, and its content `hash`; each lane carries `rankedCount`, the boundary between the ranked prefix and the computed unranked tail. The board carries `orderVersion` — order.yaml's hash or the `"absent"` sentinel, because absence is a version — and `project`, the configured name (slug-shaped everywhere, serve's synthesized entry included).
 - `GET /projects/{project}/search?q=` — case-insensitive substring search over titles and bodies, computed against a fresh disk read per query; returns matching filenames.
 - `GET /projects/{project}/items/{filename}` — raw `content` + parsed card + `hash`; 404 for a name that doesn't exist.
@@ -23,6 +23,10 @@ The contract is project-scoped: every operation except the index lives under `/p
 - `POST /projects/{project}/items/{filename}/delete` — the operator's curation gesture: removes the file and its order.yaml entries in one hash-guarded gesture.
 
 Every mutation carries `expectedHash` and/or `expectedOrderVersion` — the order version is required on *every* gesture that can touch order.yaml, never conditional on whether the item happens to be ranked. Every mutation success returns a fresh board, rebuilt from disk truth after the write.
+
+## the dirty verdict
+
+Three surfaces carry an optional `dirty` boolean: each card (this item's file is uncommitted), the board (anything under the roadmap directory is uncommitted — items, order.yaml, and assets alike), and each project-index entry (the board's verdict, judged per project at index time). The verdict comes from one read-only `git status --porcelain` shelled out per request, scoped to the roadmap directory; modified, staged, and untracked all count, because every one is work the operator hasn't committed. Where git can't answer — no git binary, a root outside any repository — the field is absent, never `false`: unknown is missing information, not cleanliness. This is the one place the tool consults git, and it only reads (the 2026-07-21 design change that opened it is exactly that narrow); altering git state remains outside the tool's jurisdiction entirely.
 
 ## the error family
 
@@ -36,5 +40,7 @@ An unknown `{project}` is a 404 `errorResponse` on every scoped operation. Refus
 ## tests
 
 `internal/server` tests run against temp-dir workspaces through project-scoped calls and pin the guard wire semantics: stale item hash → 409 `item_conflict`; stale order version → 409 `order_conflict`; expected-absent against a present order.yaml refuses while the same expectation against a genuinely absent one creates it; partial two-file failure surfaces the plain "…but order.yaml was not updated" report; capture and retitle collisions carry their recovery paths; mutations return boards that reflect the write; an unknown project 404s.
+
+The dirty verdict is pinned both ways: a git-backed fixture walks one modified item's flag across card, board, index, and item detail — the untouched sibling staying present-and-clean — and a git-less fixture proves absence on every surface.
 
 Four acceptance checks prove the project scoping rather than assuming it: a contract-path census over the parsed spec (every operation except `GET /projects` under `/projects/{project}`, exactly once); one read and one mutation driven through the generated client and generated router, proving the wire paths compose; cross-project asset assertions (`/roadmap/a/…` can only serve project a's bytes, unknown projects 404, traversal spellings never cross); and the degradation-and-heal story on one server instance — index flags the broken root with its error, its board returns the repository error while the healthy board works, capture refuses byte-for-byte untouched, and an on-disk heal recovers index and board on the next request with no rebuild.

@@ -468,6 +468,12 @@ components:
             $ref: "#/components/schemas/flag"
         hash:
           type: string
+        dirty:
+          type: boolean
+          description: >
+            true when the item's file is uncommitted in git — modified,
+            staged, or untracked alike; absent when git can't answer (no
+            git binary, no repository).
 
     lane:
       type: object
@@ -499,6 +505,12 @@ components:
         orderVersion:
           type: string
           description: order.yaml's hash, or the sentinel "absent". absence is a version.
+        dirty:
+          type: boolean
+          description: >
+            true when anything under the roadmap directory is uncommitted
+            in git — items, order.yaml, and assets alike; absent when git
+            can't answer.
 
     projectStatus:
       type: object
@@ -511,6 +523,11 @@ components:
         error:
           type: string
           description: the repository-level error for an unavailable root.
+        dirty:
+          type: boolean
+          description: >
+            the board's uncommitted verdict, judged per project at index
+            time; absent when git can't answer.
 
     projectIndex:
       type: object

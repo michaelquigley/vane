@@ -22,6 +22,9 @@ func (s *Server) GetProjects(_ context.Context) (*api.ProjectIndex, error) {
 		if p.Error != "" {
 			status.Error = api.NewOptString(p.Error)
 		}
+		if p.DirtyKnown {
+			status.Dirty = api.NewOptBool(p.Dirty)
+		}
 		out.Projects = append(out.Projects, status)
 	}
 	return out, nil
@@ -58,7 +61,7 @@ func (s *Server) GetItem(_ context.Context, params api.GetItemParams) (api.GetIt
 	if !ok {
 		return &api.ErrorResponse{Message: fmt.Sprintf("no item named %s", params.Filename)}, nil
 	}
-	card := wireCard(snap, cardFor(snap, params.Filename))
+	card := wireCard(snap, w.GitStatus(), cardFor(snap, params.Filename))
 	return &api.GetItemOK{Content: string(it.Raw), Card: card, Hash: it.Hash}, nil
 }
 

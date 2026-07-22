@@ -57,6 +57,10 @@ type ProjectStatus struct {
 	Name      string
 	Available bool
 	Error     string
+	// Dirty carries the git verdict only when DirtyKnown — unknown is
+	// absent information, never cleanliness.
+	Dirty      bool
+	DirtyKnown bool
 }
 
 // ProjectIndex is the enumerated project set plus the default's name.
@@ -75,10 +79,13 @@ func (p *Projects) Index() (*ProjectIndex, error) {
 	idx := &ProjectIndex{Default: cfg.Default}
 	for _, ref := range cfg.Projects {
 		status := ProjectStatus{Name: ref.Name, Available: true}
-		if _, err := workspace.New(ref.Root).Load(); err != nil {
+		w := workspace.New(ref.Root)
+		if _, err := w.Load(); err != nil {
 			status.Available = false
 			status.Error = err.Error()
 		}
+		git := w.GitStatus()
+		status.Dirty, status.DirtyKnown = git.Dirty, git.Known
 		idx.Projects = append(idx.Projects, status)
 	}
 	return idx, nil

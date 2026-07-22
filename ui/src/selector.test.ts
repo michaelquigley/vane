@@ -55,6 +55,33 @@ describe("selectorOptions", () => {
     expect(projectPath(sibling!.name)).toBe("/p/healthy");
   });
 
+  it("marks a dirty project with the git vernacular's asterisk", () => {
+    const options = selectorOptions(
+      {
+        projects: [
+          { name: "ranger", available: true, dirty: true },
+          { name: "archive", available: true, dirty: false },
+        ],
+        default: "ranger",
+      },
+      "ranger",
+    );
+    expect(options[0]).toEqual({ name: "ranger", label: "ranger *", disabled: false, title: "uncommitted changes" });
+    expect(options[1]).toEqual({ name: "archive", label: "archive", disabled: false, title: null });
+  });
+
+  it("lets an unavailable project's diagnostic dominate its dirty verdict", () => {
+    const options = selectorOptions(
+      {
+        projects: [{ name: "broken", available: false, error: "roadmap directory not found", dirty: true }],
+        default: "broken",
+      },
+      "broken",
+    );
+    expect(options[0].label).toBe("broken — roadmap directory not found");
+    expect(options[0].title).toBe("roadmap directory not found");
+  });
+
   it("keeps an unknown current project as a disabled entry", () => {
     const options = selectorOptions(
       { projects: [{ name: "ranger", available: true }], default: "ranger" },

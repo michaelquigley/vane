@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+FEATURE: dirty git highlights — the board shows what's uncommitted. A card whose file is dirty (modified, staged, or untracked alike) carries a quiet amber left-edge accent, the board reports a roadmap-wide verdict (order.yaml and assets included), and the project selector suffixes dirty boards with the git vernacular's `*`, so the open list answers "is everything committed?" across every board at once. The verdict rides three optional wire fields (card, board, and project index), judged by a read-only `git status` scoped to the roadmap directory, fresh per request; where git can't answer — no binary, a root outside any repository — the fields are absent and the UI shows nothing, never a pretended cleanliness. This narrows the never-touches-git rule to never-*writes*-git (a recorded design change): the tool reads status and nothing more — no git library, no staging, no commits, ever.
+
 FEATURE: `ranger desktop integrate` installs the linux launcher surface — a FreeDesktop entry that starts `ranger daemon`, plus the binoculars mark rendered into the hicolor icon theme at four sizes. The id is reverse-DNS (`com.michaelquigley.ranger`), matching the tray AppID and never shadowing the ranger file manager's system entry. `ranger desktop remove` deletes exactly what integrate installed.
 
 ## v0.1.1

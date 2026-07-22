@@ -71,22 +71,26 @@ function ProjectBoard({ project }: { project: string }) {
   // canceled or failed drop restores.
   const [preDrag, setPreDrag] = useState<Board | null>(null);
 
+  // the index rides along with board loads and gesture outcomes — not
+  // every optimistic repaint — so the selector's dirty markers and
+  // availability stay as fresh as the board without a drag-hover storm.
+  const refreshIndex = useCallback(() => {
+    fetchProjects().then(setIndex, (err) => setIndexFatal(err instanceof Error ? err.message : String(err)));
+  }, []);
+
   const reload = useCallback(async () => {
+    refreshIndex();
     try {
       setBoard(await api.fetchBoard());
       setBoardError(null);
     } catch (err) {
       setBoardError(err instanceof Error ? err.message : String(err));
     }
-  }, [api]);
+  }, [api, refreshIndex]);
 
   useEffect(() => {
     void reload();
   }, [reload]);
-
-  useEffect(() => {
-    fetchProjects().then(setIndex, (err) => setIndexFatal(err instanceof Error ? err.message : String(err)));
-  }, []);
 
   useEffect(() => {
     if (board?.project) {
@@ -122,6 +126,7 @@ function ProjectBoard({ project }: { project: string }) {
         case "ok":
           setBoard(outcome.board);
           setNotice(null);
+          refreshIndex();
           return true;
         case "conflict":
           setNotice(conflictNotice(outcome.conflict));
@@ -133,7 +138,7 @@ function ProjectBoard({ project }: { project: string }) {
           return false;
       }
     },
-    [reload],
+    [reload, refreshIndex],
   );
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
@@ -388,7 +393,7 @@ function ProjectBoard({ project }: { project: string }) {
           </div>
           <DragOverlay>
             {dragging && (
-              <div className="card card-overlay">
+              <div className={dragging.dirty ? "card card-overlay card-dirty" : "card card-overlay"}>
                 <CardBody card={dragging} />
               </div>
             )}

@@ -36,12 +36,19 @@ func (s *Board) encodeFields(e *jx.Encoder) {
 		e.FieldStart("orderVersion")
 		e.Str(s.OrderVersion)
 	}
+	{
+		if s.Dirty.Set {
+			e.FieldStart("dirty")
+			s.Dirty.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfBoard = [3]string{
+var jsonFieldsNameOfBoard = [4]string{
 	0: "project",
 	1: "lanes",
 	2: "orderVersion",
+	3: "dirty",
 }
 
 // Decode decodes Board from json.
@@ -94,6 +101,16 @@ func (s *Board) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"orderVersion\"")
+			}
+		case "dirty":
+			if err := func() error {
+				s.Dirty.Reset()
+				if err := s.Dirty.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"dirty\"")
 			}
 		default:
 			return d.Skip()
@@ -234,9 +251,15 @@ func (s *Card) encodeFields(e *jx.Encoder) {
 		e.FieldStart("hash")
 		e.Str(s.Hash)
 	}
+	{
+		if s.Dirty.Set {
+			e.FieldStart("dirty")
+			s.Dirty.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfCard = [11]string{
+var jsonFieldsNameOfCard = [12]string{
 	0:  "filename",
 	1:  "title",
 	2:  "state",
@@ -248,6 +271,7 @@ var jsonFieldsNameOfCard = [11]string{
 	8:  "log",
 	9:  "flags",
 	10: "hash",
+	11: "dirty",
 }
 
 // Decode decodes Card from json.
@@ -407,6 +431,16 @@ func (s *Card) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"hash\"")
+			}
+		case "dirty":
+			if err := func() error {
+				s.Dirty.Reset()
+				if err := s.Dirty.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"dirty\"")
 			}
 		default:
 			return d.Skip()
@@ -1708,6 +1742,41 @@ func (s *LogEntry) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
+// Encode encodes bool as json.
+func (o OptBool) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	e.Bool(bool(o.Value))
+}
+
+// Decode decodes bool from json.
+func (o *OptBool) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptBool to nil")
+	}
+	o.Set = true
+	v, err := d.Bool()
+	if err != nil {
+		return err
+	}
+	o.Value = bool(v)
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptBool) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptBool) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
 // Encode encodes int as json.
 func (o OptInt) Encode(e *jx.Encoder) {
 	if !o.Set {
@@ -1957,12 +2026,19 @@ func (s *ProjectStatus) encodeFields(e *jx.Encoder) {
 			s.Error.Encode(e)
 		}
 	}
+	{
+		if s.Dirty.Set {
+			e.FieldStart("dirty")
+			s.Dirty.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfProjectStatus = [3]string{
+var jsonFieldsNameOfProjectStatus = [4]string{
 	0: "name",
 	1: "available",
 	2: "error",
+	3: "dirty",
 }
 
 // Decode decodes ProjectStatus from json.
@@ -2007,6 +2083,16 @@ func (s *ProjectStatus) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"error\"")
+			}
+		case "dirty":
+			if err := func() error {
+				s.Dirty.Reset()
+				if err := s.Dirty.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"dirty\"")
 			}
 		default:
 			return d.Skip()
